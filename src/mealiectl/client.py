@@ -5,6 +5,13 @@ from __future__ import annotations
 import requests
 
 
+def _raise_for_status(resp: requests.Response) -> None:
+    try:
+        resp.raise_for_status()
+    except requests.HTTPError as exc:
+        raise requests.HTTPError(f"{exc}: {resp.text[:500]}", response=resp) from exc
+
+
 class MealieClient:
     """Authenticated client over the subset of the Mealie API we use."""
 
@@ -34,12 +41,12 @@ class MealieClient:
 
     def _post(self, path: str, json_body: dict) -> requests.Response:
         resp = self.session.post(self._url(path), json=json_body, timeout=self.timeout)
-        resp.raise_for_status()
+        _raise_for_status(resp)
         return resp
 
     def _put(self, path: str, json_body: dict) -> requests.Response:
         resp = self.session.put(self._url(path), json=json_body, timeout=self.timeout)
-        resp.raise_for_status()
+        _raise_for_status(resp)
         return resp
 
     def list_recipes(self) -> list[dict]:
