@@ -195,14 +195,25 @@ def test_update_payload_carries_destination_instance_fields():
     assert dest.updated["soup"]["id"] == "new-soup"
 
 
-def test_nameless_source_food_raises_clear_error():
+def test_update_payload_uses_existing_destination_recipe_fields():
+    source = FakeMealieClient(recipes=[_src_recipe("soup", userId="src-user")])
+    dest = FakeMealieClient(
+        recipes=[{"slug": "soup", "id": "dest-soup", "userId": "dest-user"}]
+    )
+    RecipeSync(source, dest, copy_images=False).run()
+    sent = dest.updated["soup"]
+    assert sent["id"] == "dest-soup" and sent["userId"] == "dest-user"
+
+
+@pytest.mark.parametrize("kind", ["foods", "units"])
+def test_nameless_source_item_raises_clear_error(kind):
     source = FakeMealieClient(
-        foods=[{"id": "f1", "name": "", "pluralName": "Felsengebirgshühner"}]
+        **{kind: [{"id": "f1", "name": "", "pluralName": "Felsengebirgshühner"}]}
     )
     dest = FakeMealieClient()
     with pytest.raises(ValueError, match="Felsengebirgshühner"):
         RecipeSync(source, dest, dry_run=True).run()
-    assert dest.foods == []
+    assert getattr(dest, kind) == []
 
 
 def test_run_counts_failure_and_continues():

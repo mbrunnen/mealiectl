@@ -1,3 +1,6 @@
+import pytest
+import requests
+
 from mealiectl.client import MealieClient
 
 
@@ -36,3 +39,14 @@ def test_client_list_recipes_paginates():
     client = MealieClient("https://x", "tok")
     client.session = _StubSession(pages)
     assert [r["slug"] for r in client.list_recipes()] == ["a", "b"]
+
+
+def test_http_error_includes_response_body():
+    resp = requests.Response()
+    resp.status_code = 400
+    resp._content = b'{"detail":{"message":"Recipe already exists"}}'
+    resp.url = "https://x/api/recipes/soup"
+    client = MealieClient("https://x", "tok")
+    client.session = type("S", (), {"put": lambda self, *a, **k: resp})()
+    with pytest.raises(requests.HTTPError, match="Recipe already exists"):
+        client.update_recipe("soup", {})
