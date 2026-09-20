@@ -188,6 +188,13 @@ def test_dry_run_writes_nothing():
     assert dest.updated == {} and dest.created == [] and dest.foods == []
 
 
+def test_update_payload_carries_destination_instance_fields():
+    source = FakeMealieClient(recipes=[_src_recipe("soup")])
+    dest = FakeMealieClient()
+    RecipeSync(source, dest, copy_images=False).run()
+    assert dest.updated["soup"]["id"] == "new-soup"
+
+
 def test_nameless_source_food_raises_clear_error():
     source = FakeMealieClient(
         foods=[{"id": "f1", "name": "", "pluralName": "Felsengebirgshühner"}]

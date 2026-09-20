@@ -319,6 +319,10 @@ class RecipeSync:
             return
         if not exists:
             self.dest.create_recipe(src["name"])
+        dest_recipe = self.dest.get_recipe(slug)
+        payload.update(
+            {f: dest_recipe[f] for f in _INSTANCE_FIELDS if f in dest_recipe}
+        )
         self.dest.update_recipe(slug, payload)
         self._sync_image(src, slug)
         self.counts[outcome] += 1
