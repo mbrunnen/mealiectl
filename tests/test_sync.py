@@ -1,5 +1,7 @@
 import copy
 
+import pytest
+
 from mealiectl.sync import RecipeSync
 
 
@@ -184,6 +186,16 @@ def test_dry_run_writes_nothing():
     counts = RecipeSync(source, dest, dry_run=True).run()
     assert counts["created"] == 1
     assert dest.updated == {} and dest.created == [] and dest.foods == []
+
+
+def test_nameless_source_food_raises_clear_error():
+    source = FakeMealieClient(
+        foods=[{"id": "f1", "name": "", "pluralName": "Felsengebirgshühner"}]
+    )
+    dest = FakeMealieClient()
+    with pytest.raises(ValueError, match="Felsengebirgshühner"):
+        RecipeSync(source, dest, dry_run=True).run()
+    assert dest.foods == []
 
 
 def test_run_counts_failure_and_continues():

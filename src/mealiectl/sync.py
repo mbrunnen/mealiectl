@@ -246,6 +246,12 @@ class RecipeSync:
         lookup = build_lookup(dest_items)
         mapping: dict[str, dict] = {}
         for src in src_items:
+            if not normalise(src.get("name")):
+                raise ValueError(
+                    f"source item {src.get('id')} has no name "
+                    f"(pluralName={src.get('pluralName')!r}); "
+                    "give it a name or delete it on the source instance"
+                )
             dest = resolve(src, lookup)
             if dest is None:
                 if self.dry_run:
